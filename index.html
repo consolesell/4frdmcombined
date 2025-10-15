@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Givan's O'Neil Command Center</title>
+    <!-- Favicon - Replace with your own custom icon if desired -->
+    <link rel="icon" href="https://example.com/favicon.ico" type="image/x-icon">
+
+    <style>
+        /* Base styles */
+        :root {
+            --bg-color-light: #f0f2f5;
+            --text-color-light: #333;
+            --header-bg-light: #e0e2e5;
+            --nav-bg-light: #c0c2c5;
+            --nav-link-light: #555;
+            --nav-link-hover-light: #007bff; /* Bright blue for hover/active */
+            --border-color-light: #ddd;
+
+            --bg-color-dark: #1a1a2e;
+            --text-color-dark: #e0e0e0;
+            --header-bg-dark: #0f3057;
+            --nav-bg-dark: #0a1f33;
+            --nav-link-dark: #a0c4ff;
+            --nav-link-hover-dark: #3f7de1; /* Slightly muted blue for hover/active */
+            --border-color-dark: #333;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            transition: background-color 0.4s ease, color 0.4s ease;
+        }
+
+        /* Default to dark mode for the dashboard */
+        body {
+            background-color: var(--bg-color-dark);
+            color: var(--text-color-dark);
+        }
+
+        header {
+            background-color: var(--header-bg-dark);
+            padding: 15px 20px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+            z-index: 10; /* Ensure header is above iframes */
+        }
+        header h1 {
+            margin: 0;
+            color: var(--text-color-dark);
+            font-size: 1.8em;
+            letter-spacing: 1px;
+        }
+
+        nav {
+            background-color: var(--nav-bg-dark);
+            padding: 10px 0;
+            box-shadow: 0 1px 6px rgba(0,0,0,0.3);
+            z-index: 9; /* Below header, above iframes */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap; /* Allow tabs to wrap on smaller screens */
+            gap: 10px; /* Space between tabs */
+        }
+        nav ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            flex-grow: 1; /* Allow ul to take available space */
+            gap: 10px; /* Space between li items */
+        }
+        nav li {
+            margin: 0; /* Remove default margin */
+        }
+        nav a {
+            text-decoration: none;
+            color: var(--nav-link-dark);
+            padding: 10px 20px; /* Increased padding for better touch targets */
+            border-radius: 8px; /* Softer edges */
+            transition: background-color 0.3s ease, color 0.3s ease, transform 0.2s ease;
+            font-weight: 600;
+            font-size: 1.05em;
+            letter-spacing: 0.5px;
+        }
+        nav a:hover {
+            background-color: var(--nav-link-hover-dark);
+            color: #ffffff;
+            transform: translateY(-2px); /* Slight lift effect on hover */
+        }
+        nav a.active {
+            background-color: var(--nav-link-hover-dark);
+            color: #ffffff;
+            /* Inset shadow for active tab */
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Dark/Light Mode Toggle Button */
+        #theme-toggle {
+            background: none;
+            border: 1px solid var(--nav-link-dark);
+            color: var(--nav-link-dark);
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, transform 0.2s ease;
+            margin-right: 20px; /* Space from right edge */
+        }
+        #theme-toggle:hover {
+            background-color: var(--nav-link-hover-dark);
+            color: #ffffff;
+            transform: translateY(-2px);
+        }
+
+        .content-area {
+            flex-grow: 1;
+            padding: 0px; /* Removed padding to maximize iframe space */
+            display: flex;
+            overflow: hidden;
+            position: relative; /* For loader positioning */
+        }
+
+        /* Iframe styling */
+        .bot-frame {
+            flex: 1;
+            border: none;
+            width: 100%;
+            height: 100%;
+            display: none;
+            background-color: var(--bg-color-dark); /* Ensure it matches dashboard bg for seamlessness */
+            transition: opacity 0.4s ease; /* Smooth fade in/out for iframes */
+            opacity: 0; /* Starts hidden for fade-in effect */
+        }
+        .bot-frame.active {
+            display: block;
+            opacity: 1;
+        }
+        .bot-frame.loading {
+            opacity: 0.5; /* Dim iframe slightly during loading */
+        }
+
+        /* Loading Spinner */
+        #loading-spinner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #3f7de1; /* Blue spinner */
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            z-index: 100; /* Above everything */
+            display: none;
+        }
+
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            nav ul {
+                flex-direction: column;
+                align-items: center;
+            }
+            nav li {
+                margin: 5px 0;
+            }
+            #theme-toggle {
+                margin-top: 10px;
+                margin-right: 0;
+                width: calc(100% - 40px); /* Adjust width for full screen minus padding */
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Givan's AI Trading Command Center</h1>
+    </header>
+
+    <nav>
+        <ul>
+            <li><a id="odd-even-tab" data-bot-key="odd-even" class="active">Odd/Even Bot</a></li>
+            <li><a id="call-put-tab" data-bot-key="call-put">CALL/PUT Bot</a></li>
+            <!-- Future bots can be added here -->
+        </ul>
+        <button id="theme-toggle">Toggle Theme</button>
+    </nav>
+
+    <div class="content-area">
+        <div id="loading-spinner"></div>
+        
+        <!-- Bot iframes -->
+        <iframe id="odd-even-iframe" data-src="https://4liferobustowdeven.netlify.app/" class="bot-frame active"></iframe>
+        <iframe id="call-put-iframe" data-src="https://sgiv4life.netlify.app/" class="bot-frame"></iframe>
+        <!-- Future bot iframes -->
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const tabs = {
+                'odd-even': { tabElement: document.getElementById('odd-even-tab'), frameElement: document.getElementById('odd-even-iframe') },
+                'call-put': { tabElement: document.getElementById('call-put-tab'), frameElement: document.getElementById('call-put-iframe') }
+                // Add more entries here for each bot
+            };
+            const loadingSpinner = document.getElementById('loading-spinner');
+            const themeToggle = document.getElementById('theme-toggle');
+            let isDarkMode = true; // Dashboard starts in dark mode
+
+            // --- Theme Toggling ---
+            const applyTheme = (dark = true) => {
+                const root = document.documentElement;
+                if (dark) {
+                    root.style.setProperty('--bg-color', 'var(--bg-color-dark)');
+                    root.style.setProperty('--text-color', 'var(--text-color-dark)');
+                    root.style.setProperty('--header-bg', 'var(--header-bg-dark)');
+                    root.style.setProperty('--nav-bg', 'var(--nav-bg-dark)');
+                    root.style.setProperty('--nav-link', 'var(--nav-link-dark)');
+                    root.style.setProperty('--nav-link-hover', 'var(--nav-link-hover-dark)');
+                    root.style.setProperty('--border-color', 'var(--border-color-dark)');
+                    document.body.classList.add('dark-mode');
+                    document.body.classList.remove('light-mode');
+                } else {
+                    root.style.setProperty('--bg-color', 'var(--bg-color-light)');
+                    root.style.setProperty('--text-color', 'var(--text-color-light)');
+                    root.style.setProperty('--header-bg', 'var(--header-bg-light)');
+                    root.style.setProperty('--nav-bg', 'var(--nav-bg-light)');
+                    root.style.setProperty('--nav-link', 'var(--nav-link-light)');
+                    root.style.setProperty('--nav-link-hover', 'var(--nav-link-hover-light)');
+                    root.style.setProperty('--border-color', 'var(--border-color-light)');
+                    document.body.classList.add('light-mode');
+                    document.body.classList.remove('dark-mode');
+                }
+                // Save preference
+                localStorage.setItem('themePreference', dark ? 'dark' : 'light');
+            };
+
+            // Load theme preference
+            const savedTheme = localStorage.getItem('themePreference');
+            if (savedTheme) {
+                isDarkMode = savedTheme === 'dark';
+            }
+            applyTheme(isDarkMode); // Apply initial theme
+
+            themeToggle.addEventListener('click', () => {
+                isDarkMode = !isDarkMode;
+                applyTheme(isDarkMode);
+                // Inform iframes about theme change directly if possible (e.g., via postMessage)
+                // For now, relies on iframes reacting to a global CSS class or local preference
+            });
+
+            // --- URL Masking for iframes ---
+            // URLs are stored in data-src and only loaded when iframe becomes active to hide them
+            // from initial page source. However, once loaded, browser dev tools can still reveal them.
+            // Full URL hiding requires server-side proxying. This is a client-side obfuscation.
+
+            // --- Seamless Bot Accommodation & Loading Animations ---
+            let activeBotKey = null;
+
+            function showLoadingSpinner(show = true) {
+                loadingSpinner.style.display = show ? 'block' : 'none';
+            }
+
+            function loadBot(botKey) {
+                const currentTab = tabs[botKey];
+                const iframe = currentTab.frameElement;
+
+                if (iframe.src === '') { // Only load src if not already loaded (first time)
+                    showLoadingSpinner(true);
+                    iframe.classList.add('loading'); // Apply dimming/loading class
+                    iframe.src = iframe.dataset.src; // Set src from data-src
+                    iframe.onload = () => {
+                        showLoadingSpinner(false);
+                        iframe.classList.remove('loading');
+                        iframe.onload = null; // Remove handler after first load
+                        // Attempt to apply dashboard theme to iframe content on load
+                        try {
+                            if (iframe.contentWindow) {
+                                iframe.contentWindow.postMessage({ type: 'SET_THEME', theme: isDarkMode ? 'dark' : 'light' }, '*');
+                                // This requires the iframe content (your bots) to listen for this message
+                                // Example listener in bot's JS:
+                                // window.addEventListener('message', (event) => {
+                                //     if (event.data && event.data.type === 'SET_THEME') {
+                                //         document.body.classList.toggle('dark-mode', event.data.theme === 'dark');
+                                //         document.body.classList.toggle('light-mode', event.data.theme === 'light');
+                                //     }
+                                // });
+                            }
+                        } catch (e) {
+                            console.warn("Could not postMessage to iframe:", e);
+                        }
+                    };
+                } else {
+                    // Already loaded, just hide spinner and transition
+                    showLoadingSpinner(false);
+                }
+            }
+
+            function switchBot(botKey) {
+                if (activeBotKey === botKey) return; // Prevent switching to already active bot
+
+                // Deactivate all tabs
+                document.querySelectorAll('nav a').forEach(tab => tab.classList.remove('active'));
+                // Hide all iframes non-active
+                for (let key in tabs) {
+                    if (key !== botKey) {
+                        tabs[key].frameElement.classList.remove('active');
+                    }
+                }
+                
+                // Activate selected tab
+                tabs[botKey].tabElement.classList.add('active');
+                
+                // Show spinner only if iframe is not yet loaded or if switching
+                if (tabs[botKey].frameElement.src === '' || activeBotKey !== null) {
+                    showLoadingSpinner(true);
+                    tabs[botKey].frameElement.classList.add('loading');
+                }
+
+                // Force a repaint for smooth transition before making active
+                setTimeout(() => {
+                    tabs[botKey].frameElement.classList.add('active');
+                    loadBot(botKey); // Load content if not already loaded
+
+                    // Hide spinner once iframe is fully loaded (handled by iframe.onload)
+                    // If already loaded, instantly hide spinner
+                    if (tabs[botKey].frameElement.src !== '' && !tabs[botKey].frameElement.classList.contains('loading')) {
+                        showLoadingSpinner(false);
+                    }
+                }, 100); // Small delay for visual transition
+
+                activeBotKey = botKey;
+            }
+
+            // Attach event listeners to tabs using data-bot-key
+            document.querySelectorAll('nav a').forEach(tab => {
+                tab.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const botKey = e.target.dataset.botKey;
+                    if (botKey) {
+                        switchBot(botKey);
+                    }
+                });
+            });
+
+            // Initial load: show the first bot and load its content
+            switchBot('odd-even');
+        });
+    </script>
+</body>
+</html>
