@@ -24,7 +24,7 @@ const DEFAULT_BOTS = [
     {
         id: 'call-put',
         name: 'CALL/PUT Bot',
-        url: 'https://sgiv4life.netlify.app/',
+        url: 'https://consolesell.github.io/4backup.mrt.bt/',
         isDefault: true
     }
 ];
