@@ -17,7 +17,7 @@ const DEFAULT_BOTS = [
     },
     {
         id: 'kichele-bot',
-        name: 'kichele Bot',
+        name: 'kichele/Bot',
         url: 'https://consolesell.github.io/4backup.mrt.bt/',
         isDefault: true
     },
