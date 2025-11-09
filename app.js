@@ -16,6 +16,12 @@ const DEFAULT_BOTS = [
         isDefault: true
     },
     {
+        id: 'kichele-bot',
+        name: 'kichele Bot',
+        url: 'https://consolesell.github.io/4backup.mrt.bt/',
+        isDefault: true
+    },
+    {
         id: 'call-put',
         name: 'CALL/PUT Bot',
         url: 'https://sgiv4life.netlify.app/',
